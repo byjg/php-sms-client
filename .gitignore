@@ -1,0 +1,4 @@
+vendor
+test_send.php
+composer.lock
+.phpunit.result.cache
