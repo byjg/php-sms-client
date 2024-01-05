@@ -1,5 +1,11 @@
 # SMS Client
 
+[![Build Status](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml)
+[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
+[![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-sms-client/)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub release](https://img.shields.io/github/release/byjg/php-sms-client.svg)](https://github.com/byjg/php-sms-client/releases/)
+
 This is a simple client to send SMS using different providers.
 
 ## Features
@@ -73,12 +79,29 @@ Use the method `getConnection()` only if you need to access the connection direc
 
 ## Implemented providers
 
-| provider                                        | URL / Documentation                                                        | Specifics                               |
-|-------------------------------------------------|----------------------------------------------------------------------------|-----------------------------------------|
-| twilio://accoundId:authToken@default            | Send a message using the [Twilio messaging](https://www.twilio.com/en-us/messaging/channels/sms) provider. | Message object requires `withSender` to set.          |
-| twilio_verify://accoundId:authToken@serviceSid  | Send a message using the [Twilio verify](https://www.twilio.com/en-us/trusted-activation/verify) verify provider.    | Message with empty body send the SMS with the OTP code. To validate the received OTP, needs to pass it to the `Message::body` |
-| byjg://username:password@default                | Send a message using the [ByJG](https://www.byjg.com.br/) provider.        | Only Brazil. |
-| fakesender://                                   | Fake sender to be used on tests.                                           | Only for tests. Do not send messages.   |
+| provider                                       | URL / Documentation                                                                                               | Specifics                                                                                                                     |
+|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| twilio://accoundId:authToken@default           | Send a message using the [Twilio messaging](https://www.twilio.com/en-us/messaging/channels/sms) provider.        | Message object requires `withSender` to set.                                                                                  | 
+| twilio_verify://accoundId:authToken@serviceSid | Send a message using the [Twilio verify](https://www.twilio.com/en-us/trusted-activation/verify) verify provider. | Message with empty body send the SMS with the OTP code. To validate the received OTP, needs to pass it to the `Message::body` |
+| byjg://username:password@default               | Send a message using the [ByJG](https://www.byjg.com.br/) provider.                                               | Only Brazil.                                                                                                                  |
+| fakesender://                                  | Fake sender to be used on tests.                                                                                  | Only for tests. Do not send messages.                                                                                         |
+
+## Install
+
+```shell
+composer require "byjg/sms-client"
+```
+
+## Dependencies
+
+```mermaid  
+flowchart TD  
+    byjg/sms-client --> byjg/webrequest
+    byjg/sms-client --> ext-curl
+```
+
+----  
+[Open source ByJG](http://opensource.byjg.com)
 
 ----
 [Open source ByJG](http://opensource.byjg.com)
