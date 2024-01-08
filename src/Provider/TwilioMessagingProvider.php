@@ -3,32 +3,46 @@
 namespace ByJG\SmsClient\Provider;
 
 use ByJG\SmsClient\HydratePhone;
+use ByJG\Util\Exception\MessageException;
+use ByJG\Util\Exception\NetworkException;
+use ByJG\Util\Exception\RequestException;
+use ByJG\Util\Helper\RequestFormUrlEncoded;
+use ByJG\Util\HttpClient;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
+use Exception;
 
 class TwilioMessagingProvider implements ProviderInterface
 {
     protected Uri $uri;
 
-    public static function schema() {
-        return 'twilio';
+    public static function schema(): array
+    {
+        return ['twilio'];
     }
 
-    public function setUp(Uri $uri) {
+    public function setUp(Uri $uri): void
+    {
         $this->uri = $uri;
     }
 
-    public function send($to, Message $envelope): ReturnObject
+    /**
+     * @throws NetworkException
+     * @throws RequestException
+     * @throws MessageException
+     * @throws Exception
+     */
+    public function send(string $to, Message $envelope): ReturnObject
     {
         if (empty($envelope->getSender())) {
-            throw new \Exception("The 'sender' is required");
+            throw new Exception("The 'sender' is required");
         }
 
         $to = HydratePhone::phone($to)->withPlusPrefix()->hydrate();
         $from = HydratePhone::phone($envelope->getSender())->withPlusPrefix()->hydrate();
 
-        $request = \ByJG\Util\Helper\RequestFormUrlEncoded::build(
+        $request = RequestFormUrlEncoded::build(
             new Uri("https://api.twilio.com/2010-04-01/Accounts/" . $this->uri->getUsername() . "/Messages.json"),
             [
                 'To' => $to,
@@ -36,7 +50,7 @@ class TwilioMessagingProvider implements ProviderInterface
                 "Body" => $envelope->getBody()
             ]
         );
-        $response = \ByJG\Util\HttpClient::getInstance()
+        $response = HttpClient::getInstance()
             ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
             ->sendRequest($request);
 

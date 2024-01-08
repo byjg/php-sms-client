@@ -9,56 +9,56 @@ class Message
     const SMS = 'sms';
     const MMS = 'mms';
 
-    protected $body;
+    protected string $body;
 
-    protected $sender = null;
+    protected ?string $sender = null;
 
-    protected $properties = [];
+    protected array $properties = [];
 
-    public function __construct($body)
+    public function __construct(string $body)
     {
         $this->body = $body;
     }
 
-    public function withSender($sender)
+    public function withSender(?string $sender)
     {
         $this->sender = $sender;
         return $this;
     }
 
-    public function getSender()
+    public function getSender(): string
     {
         return $this->sender;
     }
 
-    public function getBody()
+    public function getBody(): string
     {
         return $this->body;
     }
 
-    public function getProperties()
+    public function getProperties(): array
     {
         return $this->properties;
     }
 
-    public function getProperty($property, $default = null)
+    public function getProperty(string $property, ?string $default = null)
     {
         return $this->properties[$property] ?? $default;
     }
 
-    public function withProperty($header, $value)
+    public function withProperty(string $header, string $value): self
     {
         $this->properties[$header] = $value;
         return $this;
     }
 
-    public function withProperties(array $properties)
+    public function withProperties(array $properties): self
     {
         $this->properties = $properties;
         return $this;
     }
 
-    public static function create($body)
+    public static function create(string $body): self
     {
         return new Message($body);
     }
