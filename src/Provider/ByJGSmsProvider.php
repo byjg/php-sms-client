@@ -34,7 +34,7 @@ class ByJGSmsProvider implements ProviderInterface
     public function send(string $to, Message $envelope): ReturnObject
     {
         $to = HydratePhone::phone($to)->withPlusPrefix()->withBrazilCountryCode()->validateBrazilNumber()->hydrate();
-        $country = substr($to, 0, 3);
+        // $country = substr($to, 0, 3);
         $ddd = substr($to, 3, 2);
         $number = substr($to, 5, 9);
 

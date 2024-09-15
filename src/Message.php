@@ -20,13 +20,13 @@ class Message
         $this->body = $body;
     }
 
-    public function withSender(?string $sender)
+    public function withSender(?string $sender): static
     {
         $this->sender = $sender;
         return $this;
     }
 
-    public function getSender(): string
+    public function getSender(): ?string
     {
         return $this->sender;
     }
