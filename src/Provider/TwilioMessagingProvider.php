@@ -3,11 +3,11 @@
 namespace ByJG\SmsClient\Provider;
 
 use ByJG\SmsClient\HydratePhone;
-use ByJG\Util\Exception\MessageException;
-use ByJG\Util\Exception\NetworkException;
-use ByJG\Util\Exception\RequestException;
-use ByJG\Util\Helper\RequestFormUrlEncoded;
-use ByJG\Util\HttpClient;
+use ByJG\WebRequest\Exception\MessageException;
+use ByJG\WebRequest\Exception\NetworkException;
+use ByJG\WebRequest\Exception\RequestException;
+use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
+use ByJG\WebRequest\HttpClient;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
