@@ -17,8 +17,11 @@ class Phone
 
     protected function __construct(string $number, PhoneFormat $phoneFormat)
     {
-        $this->number = preg_replace('/[^0-9]/', '', $number);;
+        $this->number = preg_replace('/[^0-9]/', '', $number);
         $this->phoneFormat = $phoneFormat;
+        if (!str_starts_with($this->number, $phoneFormat->getCountryCode())) {
+            $this->number = $phoneFormat->getCountryCode() . $this->number;
+        }
     }
 
     public static function phone(string $number, PhoneFormat $phoneFormat): Phone
@@ -61,9 +64,9 @@ class Phone
         return true;
     }
 
-    public function hydrate(): string
+    public function hydrate(bool $throwException = true): string
     {
-        $this->validate();
+        $this->validate($throwException);
         $phone = $this->number;
 
         if ($this->countryCode) {

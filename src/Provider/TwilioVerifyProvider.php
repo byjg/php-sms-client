@@ -13,7 +13,7 @@ use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
-class TwilioVerifyProvider implements ProviderInterface
+class TwilioVerifyProvider extends ProviderBase
 {
     protected Uri $uri;
 
@@ -58,9 +58,8 @@ class TwilioVerifyProvider implements ProviderInterface
                 "Channel" => "sms"
             ]
         );
-        $response = HttpClient::getInstance()
-            ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
-            ->sendRequest($request);
+
+        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
 
         return new ReturnObject($response->getStatusCode() == 201, $response->getBody()->getContents());
     }
@@ -79,9 +78,8 @@ class TwilioVerifyProvider implements ProviderInterface
                 "Code" => $envelope->getBody()
             ]
         );
-        $response = HttpClient::getInstance()
-            ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
-            ->sendRequest($request);
+
+        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
 
         return new ReturnObject($response->getStatusCode() == 200, $response->getBody()->getContents());
    }

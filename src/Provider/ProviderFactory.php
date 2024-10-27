@@ -4,6 +4,7 @@ namespace ByJG\SmsClient\Provider;
 
 use ByJG\SmsClient\Exception\InvalidClassException;
 use ByJG\SmsClient\Exception\ProtocolNotRegisteredException;
+use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
 
@@ -82,11 +83,14 @@ class ProviderFactory
     /**
      * @throws ProtocolNotRegisteredException
      */
-    public static function createAndSend($to, $message): ReturnObject
+    public static function createAndSend(string|Phone $to, $message): ReturnObject
     {
         $provider = null;
         foreach (self::$services as $prefix => $connection) {
-            if (preg_match('/^\+?' . trim($prefix, "+") . '/', $to)) {
+            if (is_string($to) && preg_match('/^\+?' . trim($prefix, "+") . '/', $to)) {
+                $provider = self::create($connection);
+                break;
+            } else if ($to instanceof Phone && $prefix == "+" . $to->getPhoneFormat()->getCountryCode()) {
                 $provider = self::create($connection);
                 break;
             }

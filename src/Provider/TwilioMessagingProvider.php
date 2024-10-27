@@ -14,7 +14,7 @@ use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 use Exception;
 
-class TwilioMessagingProvider implements ProviderInterface
+class TwilioMessagingProvider extends ProviderBase
 {
     protected Uri $uri;
 
@@ -55,9 +55,7 @@ class TwilioMessagingProvider implements ProviderInterface
                 "Body" => $envelope->getBody()
             ]
         );
-        $response = HttpClient::getInstance()
-            ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
-            ->sendRequest($request);
+        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
 
         return new ReturnObject($response->getStatusCode() == 201 || $response->getStatusCode() == 200, $response->getBody()->getContents());
     }

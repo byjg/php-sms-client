@@ -13,7 +13,7 @@ use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
-class ByJGSmsProvider implements ProviderInterface
+class ByJGSmsProvider extends ProviderBase
 {
     protected Uri $uri;
 
@@ -57,8 +57,7 @@ class ByJGSmsProvider implements ProviderInterface
             ]
         );
 
-        $response = HttpClient::getInstance()
-            ->sendRequest($request);
+        $response = $this->sendHttpRequest(HttpClient::getInstance(), $request);
 
         $result = $response->getBody()->getContents();
 
