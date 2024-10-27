@@ -6,11 +6,11 @@
       "ByJG\\SmsClient\\": "src/"
     }
   },
-    "autoload-dev": {
-        "psr-4": {
-        "Tests\\": "tests/"
-        }
-    },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+      }
+  },
   "prefer-stable": true,
   "minimum-stability": "dev",
   "require": {

@@ -2,7 +2,8 @@
 
 namespace ByJG\SmsClient\Provider;
 
-use ByJG\SmsClient\HydratePhone;
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
 use ByJG\WebRequest\Exception\MessageException;
 use ByJG\WebRequest\Exception\NetworkException;
 use ByJG\WebRequest\Exception\RequestException;
@@ -33,19 +34,23 @@ class TwilioMessagingProvider implements ProviderInterface
      * @throws MessageException
      * @throws Exception
      */
-    public function send(string $to, Message $envelope): ReturnObject
+    public function send(string|Phone $to, Message $envelope): ReturnObject
     {
         if (empty($envelope->getSender())) {
             throw new Exception("The 'sender' is required");
         }
 
-        $to = HydratePhone::phone($to)->withPlusPrefix()->hydrate();
-        $from = HydratePhone::phone($envelope->getSender())->withPlusPrefix()->hydrate();
+        if (is_string($to)) {
+            $to = Phone::phone($to, new USPhoneFormat());
+        }
+
+        $toStr = $to->withPlusPrefix()->withCountryCode()->hydrate();
+        $from = Phone::phone($envelope->getSender(), $to->getPhoneFormat())->withPlusPrefix()->withCountryCode()->hydrate();
 
         $request = RequestFormUrlEncoded::build(
             new Uri("https://api.twilio.com/2010-04-01/Accounts/" . $this->uri->getUsername() . "/Messages.json"),
             [
-                'To' => $to,
+                'To' => $toStr,
                 'From' => $from,
                 "Body" => $envelope->getBody()
             ]

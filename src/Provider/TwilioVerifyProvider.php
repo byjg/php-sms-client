@@ -2,7 +2,8 @@
 
 namespace ByJG\SmsClient\Provider;
 
-use ByJG\SmsClient\HydratePhone;
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
 use ByJG\WebRequest\Exception\MessageException;
 use ByJG\WebRequest\Exception\NetworkException;
 use ByJG\WebRequest\Exception\RequestException;
@@ -31,13 +32,16 @@ class TwilioVerifyProvider implements ProviderInterface
      * @throws RequestException
      * @throws MessageException
      */
-    public function send(string $to, Message $envelope): ReturnObject {
+    public function send(string|Phone $to, Message $envelope): ReturnObject {
+        if (is_string($to)) {
+            $to = Phone::phone($to, new USPhoneFormat());
+        }
+
         if (empty($envelope->getBody())) {
             return $this->sendVerify($to);
         } else {
             return $this->sendVerifyCheck($to, $envelope);
         }
-
     }
 
     /**
@@ -45,12 +49,12 @@ class TwilioVerifyProvider implements ProviderInterface
      * @throws RequestException
      * @throws MessageException
      */
-    protected function sendVerify($to): ReturnObject
+    protected function sendVerify(Phone $to): ReturnObject
     {
         $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/Verifications"),
             [
-                'To' => HydratePhone::phone($to)->withPlusPrefix()->hydrate(),
+                'To' => $to->withPlusPrefix()->withCountryCode()->hydrate(),
                 "Channel" => "sms"
             ]
         );
@@ -66,12 +70,12 @@ class TwilioVerifyProvider implements ProviderInterface
      * @throws RequestException
      * @throws MessageException
      */
-    protected function sendVerifyCheck($to, Message $envelope): ReturnObject
+    protected function sendVerifyCheck(Phone $to, Message $envelope): ReturnObject
     {
         $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/VerificationCheck"),
             [
-                'To' => HydratePhone::phone($to)->withPlusPrefix()->hydrate(),
+                'To' => $to->withPlusPrefix()->withCountryCode()->hydrate(),
                 "Code" => $envelope->getBody()
             ]
         );
