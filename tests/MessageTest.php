@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests;
+
 use ByJG\SmsClient\Message;
 use PHPUnit\Framework\TestCase;
 

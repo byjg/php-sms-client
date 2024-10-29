@@ -2,31 +2,51 @@
 
 namespace ByJG\SmsClient\Provider;
 
-use ByJG\SmsClient\HydratePhone;
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\BrazilianPhoneFormat;
+use ByJG\WebRequest\Exception\MessageException;
+use ByJG\WebRequest\Exception\NetworkException;
+use ByJG\WebRequest\Exception\RequestException;
+use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
+use ByJG\WebRequest\HttpClient;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
-class ByJGSmsProvider implements ProviderInterface
+class ByJGSmsProvider extends ProviderBase
 {
     protected Uri $uri;
 
-    public static function schema() {
-        return 'byjg';
+    public static function schema(): array
+    {
+        return ['byjg'];
     }
 
-    public function setUp(Uri $uri) {
+    public function setUp(Uri $uri): void
+    {
         $this->uri = $uri;
     }
 
-    public function send($to, Message $envelope): ReturnObject
+    /**
+     * @throws NetworkException
+     * @throws RequestException
+     * @throws MessageException
+     */
+    public function send(string|Phone $to, Message $envelope): ReturnObject
     {
-        $to = HydratePhone::phone($to)->withPlusPrefix()->withBrazilCountryCode()->validateBrazilNumber()->hydrate();
-        $country = substr($to, 0, 3);
-        $ddd = substr($to, 3, 2);
-        $number = substr($to, 5, 9);
+        if (is_string($to)) {
+            $to = Phone::phone($to, new BrazilianPhoneFormat());
+        }
 
-        $request = \ByJG\Util\Helper\RequestFormUrlEncoded::build(
+        if (!($to->getPhoneFormat() instanceof BrazilianPhoneFormat)) {
+            throw new MessageException("The phone number must be in Brazilian format");
+        }
+
+        $to = $to->withNoCountryCode()->withNoPlusPrefix()->hydrate();
+        $ddd = substr($to, 0, 2);
+        $number = substr($to, 2, 9);
+
+        $request = RequestFormUrlEncoded::build(
             new Uri("https://www.byjg.com.br/ws/sms?httpmethod=enviarsms"),
             [
                 'ddd' => $ddd,
@@ -37,8 +57,7 @@ class ByJGSmsProvider implements ProviderInterface
             ]
         );
 
-        $response = \ByJG\Util\HttpClient::getInstance()
-            ->sendRequest($request);
+        $response = $this->sendHttpRequest(HttpClient::getInstance(), $request);
 
         $result = $response->getBody()->getContents();
 

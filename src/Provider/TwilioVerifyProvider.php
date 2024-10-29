@@ -2,60 +2,84 @@
 
 namespace ByJG\SmsClient\Provider;
 
-use ByJG\SmsClient\HydratePhone;
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
+use ByJG\WebRequest\Exception\MessageException;
+use ByJG\WebRequest\Exception\NetworkException;
+use ByJG\WebRequest\Exception\RequestException;
+use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
+use ByJG\WebRequest\HttpClient;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
-class TwilioVerifyProvider implements ProviderInterface
+class TwilioVerifyProvider extends ProviderBase
 {
     protected Uri $uri;
 
-    public static function schema() {
-        return 'twilio_verify';
+    public static function schema(): array
+    {
+        return ['twilio_verify'];
     }
 
-    public function setUp(Uri $uri) {
+    public function setUp(Uri $uri): void
+    {
         $this->uri = $uri;
     }
 
-    public function send($to, Message $envelope): ReturnObject {
+    /**
+     * @throws NetworkException
+     * @throws RequestException
+     * @throws MessageException
+     */
+    public function send(string|Phone $to, Message $envelope): ReturnObject {
+        if (is_string($to)) {
+            $to = Phone::phone($to, new USPhoneFormat());
+        }
+
         if (empty($envelope->getBody())) {
-            return $this->sendVerify($to, $envelope);
+            return $this->sendVerify($to);
         } else {
             return $this->sendVerifyCheck($to, $envelope);
         }
-
     }
 
-    protected function sendVerify($to, Message $envelope): ReturnObject
+    /**
+     * @throws NetworkException
+     * @throws RequestException
+     * @throws MessageException
+     */
+    protected function sendVerify(Phone $to): ReturnObject
     {
-        $request = \ByJG\Util\Helper\RequestFormUrlEncoded::build(
+        $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/Verifications"),
             [
-                'To' => HydratePhone::phone($to)->withPlusPrefix()->hydrate(),
+                'To' => $to->withPlusPrefix()->withCountryCode()->hydrate(),
                 "Channel" => "sms"
             ]
         );
-        $response = \ByJG\Util\HttpClient::getInstance()
-            ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
-            ->sendRequest($request);
+
+        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
 
         return new ReturnObject($response->getStatusCode() == 201, $response->getBody()->getContents());
     }
 
-    protected function sendVerifyCheck($to, Message $envelope): ReturnObject
+    /**
+     * @throws NetworkException
+     * @throws RequestException
+     * @throws MessageException
+     */
+    protected function sendVerifyCheck(Phone $to, Message $envelope): ReturnObject
     {
-        $request = \ByJG\Util\Helper\RequestFormUrlEncoded::build(
+        $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/VerificationCheck"),
             [
-                'To' => HydratePhone::phone($to)->withPlusPrefix()->hydrate(),
+                'To' => $to->withPlusPrefix()->withCountryCode()->hydrate(),
                 "Code" => $envelope->getBody()
             ]
         );
-        $response = \ByJG\Util\HttpClient::getInstance()
-            ->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword())
-            ->sendRequest($request);
+
+        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
 
         return new ReturnObject($response->getStatusCode() == 200, $response->getBody()->getContents());
    }

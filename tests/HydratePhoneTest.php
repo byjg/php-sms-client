@@ -1,159 +1,176 @@
 <?php
 
-use ByJG\SmsClient\HydratePhone;
+namespace Tests;
+
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\BrazilianPhoneFormat;
+use ByJG\SmsClient\PhoneFormat\PhoneFormat;
+use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class HydratePhoneTest extends TestCase
 {
     /**
-     * @dataProvider usDataProvider
+     * @dataProvider dataProviderWithPlusAndCountry
      */
-    public function testUSNumber($source, $expected)
+    public function testHydrateNumberWithPlusAndCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
     {
-        $phone = HydratePhone::phone($source)
+        $phone = Phone::phone($source, $phoneFormat)
             ->withPlusPrefix()
-            ->withUSCountryCode()
-            ->validateUSNumber()
+            ->withCountryCode()
             ->hydrate();
         $this->assertEquals($expected, $phone);
 
-        $phone = HydratePhone::hydrateUsNumber($source);
-        $this->assertEquals($expected, $phone);
+        $phone = Phone::phone($source, $phoneFormat)
+            ->withPlusPrefix()
+            ->withCountryCode()
+            ->format();
+        $this->assertEquals($expectedFormat, $phone);
+
+        $validate = Phone::phone($source, $phoneFormat)
+            ->withPlusPrefix()
+            ->withCountryCode()
+            ->validate(throwException: false);
+        $this->assertTrue($validate);
     }
 
-    public function usDataProvider()
+    public function dataProviderWithPlusAndCountry()
     {
         return [
-            ['+1(234)567-8900', '+12345678900' ],
-            ['(234)567-8900', '+12345678900' ],
-            ['+12345678900', '+12345678900' ],
-            ['+2345678900', '+12345678900' ],
-            ['12345678900', '+12345678900' ],
-            ['2345678900', '+12345678900' ],
+            ['+1(234)567-8900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['(234)567-8900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['+12345678900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['+2345678900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['12345678900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['2345678900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
+            ['+55(21)91234-5678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
+            ['55(21)91234-5678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
+            ['+5521912345678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
+            ['5521912345678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
+            ['21912345678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
+            ['+21912345678', new BrazilianPhoneFormat(), '+5521912345678', '+55(21)91234-5678' ],
         ];
     }
 
     /**
-     * @dataProvider usDataProvider2
+     * @dataProvider dataProviderWithCountry
      */
-    public function testUSNumber2($source, $expected)
+    public function testNumberWithCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
     {
-        $phone = HydratePhone::phone($source)
+        $phone = Phone::phone($source, $phoneFormat)
             ->withNoPlusPrefix()
-            ->withUSCountryCode()
-            ->validateUSNumber()
             ->hydrate();
         $this->assertEquals($expected, $phone);
+
+        $phone = Phone::phone($source, $phoneFormat)
+            ->withNoPlusPrefix()
+            ->format();
+        $this->assertEquals($expectedFormat, $phone);
+
+        $validate = Phone::phone($source, $phoneFormat)
+            ->withNoPlusPrefix()
+            ->validate(throwException: false);
+        $this->assertTrue($validate);
     }
 
-    public function usDataProvider2()
+    public function dataProviderWithCountry()
     {
         return [
-            ['+1(234)567-8900', '12345678900' ],
-            ['(234)567-8900', '12345678900' ],
-            ['+12345678900', '12345678900' ],
-            ['+2345678900', '12345678900' ],
-            ['12345678900', '12345678900' ],
-            ['2345678900', '12345678900' ],
+            ['+1(234)567-8900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['(234)567-8900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['+12345678900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['+2345678900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['12345678900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['2345678900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
+            ['+(55)2191234-5678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
+            ['(55)2191234-5678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
+            ['+5521912345678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
+            ['5521912345678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
+            ['21912345678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
+            ['+21912345678', new BrazilianPhoneFormat(), '5521912345678', '55(21)91234-5678' ],
         ];
     }
 
     /**
-     * @dataProvider usDataProvider3
+     * @dataProvider dataProviderOnlyNumber
      */
-    public function testUSInvalid($source)
+    public function testOnlyNumber($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
+    {
+        $phone = Phone::phone($source, $phoneFormat)
+            ->withNoPlusPrefix()
+            ->withNoCountryCode()
+            ->hydrate();
+        $this->assertEquals($expected, $phone);
+
+        $phone = Phone::phone($source, $phoneFormat)
+            ->withNoPlusPrefix()
+            ->withNoCountryCode()
+            ->format();
+        $this->assertEquals($expectedFormat, $phone);
+
+        $validate = Phone::phone($source, $phoneFormat)
+            ->withNoPlusPrefix()
+            ->withNoCountryCode()
+            ->validate(throwException: false);
+        $this->assertTrue($validate);
+    }
+
+    public function dataProviderOnlyNumber()
+    {
+        return [
+            ['+1(234)567-8900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['(234)567-8900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['+12345678900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['+2345678900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['12345678900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['2345678900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
+            ['+(55)2191234-5678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+            ['(55)2191234-5678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+            ['+5521912345678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+            ['5521912345678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+            ['21912345678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+            ['+21912345678', new BrazilianPhoneFormat(), '21912345678', '(21)91234-5678' ],
+        ];
+    }
+
+    /**
+     * @dataProvider dateProviderInvalidPhone
+     */
+    public function testInvalidPhone($source, PhoneFormat $phoneFormat)
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $phone = HydratePhone::phone($source)
-            ->validateUSNumber();
-    }
-
-    public function usDataProvider3()
-    {
-        return [
-            ['11345678900'],
-            ['92345678900'],
-            ['1234567890'],
-            ['123456789000'],
-        ];
+        $phone = Phone::phone($source, $phoneFormat)
+            ->validate();
     }
 
     /**
-     * @dataProvider brazilDataProvider
+     * @dataProvider dateProviderInvalidPhone
      */
-    public function testBrazilNumber($source, $expected)
+    public function testInvalidPhone2($source, PhoneFormat $phoneFormat)
     {
-        $phone = HydratePhone::phone($source)
-            ->withPlusPrefix()
-            ->withBrazilCountryCode()
-            ->validateBrazilNumber()
-            ->hydrate();
-        $this->assertEquals($expected, $phone);
+        $validate = Phone::phone($source, $phoneFormat)
+            ->validate(throwException: false);
 
-        $phone = HydratePhone::hydrateBrazilNumber($source);
-        $this->assertEquals($expected, $phone);
+        $this->assertFalse($validate);
     }
 
-    public function brazilDataProvider()
+    public function dateProviderInvalidPhone()
     {
         return [
-            ['+55(21)91234-5678', '+5521912345678' ],
-            ['55(21)91234-5678', '+5521912345678' ],
-            ['+5521912345678', '+5521912345678' ],
-            ['5521912345678', '+5521912345678' ],
-            ['21912345678', '+5521912345678' ],
-            ['+21912345678', '+5521912345678' ],
-        ];
-    }
-
-    /**
-     * @dataProvider brazilDataProvider2
-     */
-    public function testBrazilNumber2($source, $expected)
-    {
-        $phone = HydratePhone::phone($source)
-            ->withNoPlusPrefix()
-            ->withBrazilCountryCode()
-            ->validateBrazilNumber()
-            ->hydrate();
-        $this->assertEquals($expected, $phone);
-    }
-
-    public function brazilDataProvider2()
-    {
-        return [
-            ['+(55)2191234-5678', '5521912345678' ],
-            ['(55)2191234-5678', '5521912345678' ],
-            ['+5521912345678', '5521912345678' ],
-            ['5521912345678', '5521912345678' ],
-            ['21912345678', '5521912345678' ],
-            ['+21912345678', '5521912345678' ],
-        ];
-    }
-
-    /**
-     * @dataProvider brazilDataProvider3
-     */
-    public function testBrazilNumberInvalid($source)
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        $phone = HydratePhone::phone($source)
-            ->validateBrazilNumber();
-    }
-
-    public function brazilDataProvider3()
-    {
-        return [
-            ['+55(21)91234-56789' ],
-            ['55(21)91234-567' ],
-            ['+55219123456789' ],
-            ['552191234567' ],
-            ['+552191234567' ],
-            ['55219123456789' ],
-            ['2191234567' ],
-            ['+2191234567' ],
+            ['11345678900', new USPhoneFormat()],
+            ['92345678900', new USPhoneFormat()],
+            ['1234567890', new USPhoneFormat()],
+            ['123456789000', new USPhoneFormat()],
+            ['+55(21)91234-56789', new BrazilianPhoneFormat()],
+            ['55(21)91234-567', new BrazilianPhoneFormat()],
+            ['+55219123456789', new BrazilianPhoneFormat()],
+            ['552191234567', new BrazilianPhoneFormat()],
+            ['+552191234567', new BrazilianPhoneFormat()],
+            ['55219123456789', new BrazilianPhoneFormat()],
+            ['2191234567', new BrazilianPhoneFormat()],
+            ['+2191234567', new BrazilianPhoneFormat()],
         ];
     }
 }

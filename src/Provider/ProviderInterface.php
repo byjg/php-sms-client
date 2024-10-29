@@ -2,15 +2,16 @@
 
 namespace ByJG\SmsClient\Provider;
 
+use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
 
 interface ProviderInterface
 {
-    public static function schema();
+    public static function schema(): array;
 
-    public function setUp(Uri $uri);
+    public function setUp(Uri $uri): void;
 
-    public function send($to, Message $envelope): ReturnObject;
+    public function send(string|Phone $to, Message $envelope): ReturnObject;
 }
