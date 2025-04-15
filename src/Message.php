@@ -11,7 +11,7 @@ class Message
 
     protected string $body;
 
-    protected ?string $sender = null;
+    protected null|string|Phone $sender = null;
 
     protected array $properties = [];
 
@@ -20,13 +20,13 @@ class Message
         $this->body = $body;
     }
 
-    public function withSender(?string $sender): static
+    public function withSender(null|string|Phone $sender): static
     {
         $this->sender = $sender;
         return $this;
     }
 
-    public function getSender(): ?string
+    public function getSender(): null|Phone|string
     {
         return $this->sender;
     }
