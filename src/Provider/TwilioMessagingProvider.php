@@ -45,8 +45,13 @@ class TwilioMessagingProvider extends ProviderBase
         }
 
         $toStr = $to->withPlusPrefix()->withCountryCode()->hydrate();
-        $from = Phone::phone($envelope->getSender(), $to->getPhoneFormat())->withPlusPrefix()->withCountryCode()->hydrate();
+        if (is_string($envelope->getSender())) {
+            $from = Phone::phone($envelope->getSender(), $to->getPhoneFormat());
+        } else {
+            $from = $envelope->getSender();
+        }
 
+        $from = $from->withPlusPrefix()->withCountryCode()->hydrate();
         $request = RequestFormUrlEncoded::build(
             new Uri("https://api.twilio.com/2010-04-01/Accounts/" . $this->uri->getUsername() . "/Messages.json"),
             [
