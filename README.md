@@ -6,102 +6,110 @@
 [![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/opensource/licensing.html)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-sms-client.svg)](https://github.com/byjg/php-sms-client/releases/)
 
-This is a simple client to send SMS using different providers.
+A lightweight, extensible PHP library for sending SMS messages through multiple providers.
 
 ## Features
 
-* Low code to send SMS
-* Classes totally decoupled
-* Easy to implement new providers
+- **Low code** - Simple, intuitive API for sending SMS
+- **Provider agnostic** - Support for multiple SMS providers
+- **Extensible** - Easy to implement custom providers
+- **Phone formatting** - Built-in phone number validation and formatting
+- **Multi-provider support** - Route messages to different providers based on country codes
 
-## Usage
+## Installation
 
-### Using ProviderFactory
+```shell
+composer require byjg/sms-client
+```
+
+## Quick Start
 
 ```php
-// Register the provider and associate with a scheme
-ProviderFactory::registerProvider(TwilioMessagingProvider::class);
+use ByJG\SmsClient\Message;
+use ByJG\SmsClient\Provider\ProviderFactory;
+use ByJG\SmsClient\Provider\TwilioMessagingProvider;
+use ByJG\Uri\Uri;
 
-// Create a provider
+// Register and create provider
+ProviderFactory::registerProvider(TwilioMessagingProvider::class);
 $provider = ProviderFactory::create(new Uri("twilio://$accountSid:$authToken@default"));
 
-// Send a message
-$response = $byjg->send("12221234567", (new \ByJG\SmsClient\Message("This is a test message")->withSender("+12223217654"));
+// Send message
+$response = $provider->send(
+    "+12221234567",
+    (new Message("Hello World!"))->withSender("+12223217654")
+);
 
-// Check if the message was sent
+// Check result
 if ($response->isSent()) {
-    echo "Message sent";
-} else {
-    echo "Message not sent";
+    echo "Message sent successfully!";
 }
 ```
 
-### Using ProviderFactory to send a message to multiple providers depending on the country
+## Documentation
 
+- [Basic Usage](docs/basic-usage.md) - Learn how to send SMS messages
+- [Phone Formatting](docs/phone-formatting.md) - Phone number validation and formatting
+- [Providers](docs/providers.md) - Available SMS providers and configuration
+- [Custom Providers](docs/custom-providers.md) - Create your own SMS provider
+
+## Available Providers
+
+| Provider | URI Scheme | Documentation | Region |
+|----------|-----------|---------------|--------|
+| Twilio Messaging | `twilio://accountId:authToken@default` | [Twilio SMS](https://www.twilio.com/en-us/messaging/channels/sms) | Global |
+| Twilio Verify | `twilio_verify://accountId:authToken@serviceSid` | [Twilio Verify](https://www.twilio.com/en-us/trusted-activation/verify) | Global |
+| ByJG SMS | `byjg://username:password@default` | [ByJG](https://www.byjg.com.br/) | Brazil |
+| Fake Sender | `fakesender://` | Testing only | Testing |
+
+## Multi-Provider Setup
+
+Route messages to different providers based on country codes:
 
 ```php
-// Register the provider and associate with a scheme
+use ByJG\SmsClient\Provider\ProviderFactory;
+use ByJG\SmsClient\Provider\TwilioMessagingProvider;
+use ByJG\SmsClient\Provider\ByJGSmsProvider;
+use ByJG\SmsClient\Message;
+
+// Register providers
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);
 ProviderFactory::registerProvider(ByJGSmsProvider::class);
 
-// Define the provider according to the country prefix
-ProviderFactory::registerServices("twilio://accoundId:authToken@default", ["+1"]);
-ProviderFactory::registerServices("byjg://username:password@default", ["+55"]);
+// Associate with country codes
+ProviderFactory::registerServices("twilio://accountId:authToken@default", "+1");
+ProviderFactory::registerServices("byjg://username:password@default", "+55");
 
-// Send a message and select the provider according to the country prefix
-$response = ProviderFactory::createAndSend("+5521900001234", (new \ByJG\SmsClient\Message("This is a test message")));
-var_dump($response);
-
-$response = ProviderFactory::createAndSend("+12221234567", (new \ByJG\SmsClient\Message("This is a test message"))->withSender("+12223217654"));
-var_dump($response);
+// Automatically routes to the right provider
+ProviderFactory::createAndSend("+12221234567", new Message("Hello USA!"));
+ProviderFactory::createAndSend("+5521987654321", new Message("Olá Brasil!"));
 ```
 
-## Providers
+## Phone Number Formatting
 
-The providers are the classes responsible to send the text message.
-
-All providers have the following interface:
+Format and validate phone numbers with country-specific rules:
 
 ```php
-<?php
-interface ProviderInterface
-{
-    public static function schema();
+use ByJG\SmsClient\Phone;
+use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
 
-    public function setUp(Uri $uri);
+$phone = Phone::phone("2345678900", new USPhoneFormat())
+    ->withPlusPrefix()
+    ->withCountryCode();
 
-    public function send($to, Message $envelope): ReturnObject;
-}
-```
+echo $phone->hydrate();  // Output: +12345678900
+echo $phone->format();   // Output: +1(234)567-8900
 
-There is no necessary call the method `getConnection()` because the method publish() and consume() will call it automatically.
-Use the method `getConnection()` only if you need to access the connection directly.
-
-## Implemented providers
-
-| provider                                       | URL / Documentation                                                                                               | Specifics                                                                                                                     |
-|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| twilio://accoundId:authToken@default           | Send a message using the [Twilio messaging](https://www.twilio.com/en-us/messaging/channels/sms) provider.        | Message object requires `withSender` to set.                                                                                  | 
-| twilio_verify://accoundId:authToken@serviceSid | Send a message using the [Twilio verify](https://www.twilio.com/en-us/trusted-activation/verify) verify provider. | Message with empty body send the SMS with the OTP code. To validate the received OTP, needs to pass it to the `Message::body` |
-| byjg://username:password@default               | Send a message using the [ByJG](https://www.byjg.com.br/) provider.                                               | Only Brazil.                                                                                                                  |
-| fakesender://                                  | Fake sender to be used on tests.                                                                                  | Only for tests. Do not send messages.                                                                                         |
-
-## Install
-
-```shell
-composer require "byjg/sms-client"
+// Validate phone numbers
+$isValid = $phone->validate(throwException: false);
 ```
 
 ## Dependencies
 
-```mermaid  
-flowchart TD  
+```mermaid
+flowchart TD
     byjg/sms-client --> byjg/webrequest
-    byjg/sms-client --> ext-curl
 ```
-
-----  
-[Open source ByJG](http://opensource.byjg.com)
 
 ----
 [Open source ByJG](http://opensource.byjg.com)
