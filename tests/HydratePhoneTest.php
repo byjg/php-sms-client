@@ -7,13 +7,12 @@ use ByJG\SmsClient\PhoneFormat\BrazilianPhoneFormat;
 use ByJG\SmsClient\PhoneFormat\PhoneFormat;
 use ByJG\SmsClient\PhoneFormat\USPhoneFormat;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class HydratePhoneTest extends TestCase
 {
-    /**
-     * @dataProvider dataProviderWithPlusAndCountry
-     */
+    #[DataProvider('dataProviderWithPlusAndCountry')]
     public function testHydrateNumberWithPlusAndCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
     {
         $phone = Phone::phone($source, $phoneFormat)
@@ -35,7 +34,7 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public function dataProviderWithPlusAndCountry()
+    public static function dataProviderWithPlusAndCountry()
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
@@ -53,9 +52,7 @@ class HydratePhoneTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataProviderWithCountry
-     */
+    #[DataProvider('dataProviderWithCountry')]
     public function testNumberWithCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
     {
         $phone = Phone::phone($source, $phoneFormat)
@@ -74,7 +71,7 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public function dataProviderWithCountry()
+    public static function dataProviderWithCountry()
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
@@ -92,9 +89,7 @@ class HydratePhoneTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataProviderOnlyNumber
-     */
+    #[DataProvider('dataProviderOnlyNumber')]
     public function testOnlyNumber($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
     {
         $phone = Phone::phone($source, $phoneFormat)
@@ -116,7 +111,7 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public function dataProviderOnlyNumber()
+    public static function dataProviderOnlyNumber()
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
@@ -134,9 +129,7 @@ class HydratePhoneTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dateProviderInvalidPhone
-     */
+    #[DataProvider('dateProviderInvalidPhone')]
     public function testInvalidPhone($source, PhoneFormat $phoneFormat)
     {
         $this->expectException(InvalidArgumentException::class);
@@ -145,9 +138,7 @@ class HydratePhoneTest extends TestCase
             ->validate();
     }
 
-    /**
-     * @dataProvider dateProviderInvalidPhone
-     */
+    #[DataProvider('dateProviderInvalidPhone')]
     public function testInvalidPhone2($source, PhoneFormat $phoneFormat)
     {
         $validate = Phone::phone($source, $phoneFormat)
@@ -156,7 +147,7 @@ class HydratePhoneTest extends TestCase
         $this->assertFalse($validate);
     }
 
-    public function dateProviderInvalidPhone()
+    public static function dateProviderInvalidPhone()
     {
         return [
             ['11345678900', new USPhoneFormat()],
