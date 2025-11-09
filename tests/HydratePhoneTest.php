@@ -10,10 +10,10 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class HydratePhoneTest extends TestCase
+final class HydratePhoneTest extends TestCase
 {
     #[DataProvider('dataProviderWithPlusAndCountry')]
-    public function testHydrateNumberWithPlusAndCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
+    public function testHydrateNumberWithPlusAndCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat): void
     {
         $phone = Phone::phone($source, $phoneFormat)
             ->withPlusPrefix()
@@ -34,7 +34,12 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public static function dataProviderWithPlusAndCountry()
+    /**
+     * @return (BrazilianPhoneFormat|USPhoneFormat|string)[][]
+     *
+     * @psalm-return list{list{'+1(234)567-8900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'(234)567-8900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'+12345678900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'+2345678900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'12345678900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'2345678900', USPhoneFormat, '+12345678900', '+1(234)567-8900'}, list{'+55(21)91234-5678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}, list{'55(21)91234-5678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}, list{'+5521912345678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}, list{'5521912345678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}, list{'21912345678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}, list{'+21912345678', BrazilianPhoneFormat, '+5521912345678', '+55(21)91234-5678'}}
+     */
+    public static function dataProviderWithPlusAndCountry(): array
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '+12345678900', '+1(234)567-8900' ],
@@ -53,7 +58,7 @@ class HydratePhoneTest extends TestCase
     }
 
     #[DataProvider('dataProviderWithCountry')]
-    public function testNumberWithCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
+    public function testNumberWithCountry($source, PhoneFormat $phoneFormat, $expected, $expectedFormat): void
     {
         $phone = Phone::phone($source, $phoneFormat)
             ->withNoPlusPrefix()
@@ -71,7 +76,12 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public static function dataProviderWithCountry()
+    /**
+     * @return (BrazilianPhoneFormat|USPhoneFormat|string)[][]
+     *
+     * @psalm-return list{list{'+1(234)567-8900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'(234)567-8900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'+12345678900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'+2345678900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'12345678900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'2345678900', USPhoneFormat, '12345678900', '1(234)567-8900'}, list{'+(55)2191234-5678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}, list{'(55)2191234-5678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}, list{'+5521912345678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}, list{'5521912345678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}, list{'21912345678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}, list{'+21912345678', BrazilianPhoneFormat, '5521912345678', '55(21)91234-5678'}}
+     */
+    public static function dataProviderWithCountry(): array
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '12345678900', '1(234)567-8900' ],
@@ -90,7 +100,7 @@ class HydratePhoneTest extends TestCase
     }
 
     #[DataProvider('dataProviderOnlyNumber')]
-    public function testOnlyNumber($source, PhoneFormat $phoneFormat, $expected, $expectedFormat)
+    public function testOnlyNumber($source, PhoneFormat $phoneFormat, $expected, $expectedFormat): void
     {
         $phone = Phone::phone($source, $phoneFormat)
             ->withNoPlusPrefix()
@@ -111,7 +121,12 @@ class HydratePhoneTest extends TestCase
         $this->assertTrue($validate);
     }
 
-    public static function dataProviderOnlyNumber()
+    /**
+     * @return (BrazilianPhoneFormat|USPhoneFormat|string)[][]
+     *
+     * @psalm-return list{list{'+1(234)567-8900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'(234)567-8900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'+12345678900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'+2345678900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'12345678900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'2345678900', USPhoneFormat, '2345678900', '(234)567-8900'}, list{'+(55)2191234-5678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}, list{'(55)2191234-5678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}, list{'+5521912345678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}, list{'5521912345678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}, list{'21912345678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}, list{'+21912345678', BrazilianPhoneFormat, '21912345678', '(21)91234-5678'}}
+     */
+    public static function dataProviderOnlyNumber(): array
     {
         return [
             ['+1(234)567-8900', new USPhoneFormat(), '2345678900', '(234)567-8900' ],
@@ -130,7 +145,7 @@ class HydratePhoneTest extends TestCase
     }
 
     #[DataProvider('dateProviderInvalidPhone')]
-    public function testInvalidPhone($source, PhoneFormat $phoneFormat)
+    public function testInvalidPhone($source, PhoneFormat $phoneFormat): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -139,7 +154,7 @@ class HydratePhoneTest extends TestCase
     }
 
     #[DataProvider('dateProviderInvalidPhone')]
-    public function testInvalidPhone2($source, PhoneFormat $phoneFormat)
+    public function testInvalidPhone2($source, PhoneFormat $phoneFormat): void
     {
         $validate = Phone::phone($source, $phoneFormat)
             ->validate(throwException: false);
@@ -147,7 +162,12 @@ class HydratePhoneTest extends TestCase
         $this->assertFalse($validate);
     }
 
-    public static function dateProviderInvalidPhone()
+    /**
+     * @return (BrazilianPhoneFormat|USPhoneFormat|string)[][]
+     *
+     * @psalm-return list{list{'11345678900', USPhoneFormat}, list{'92345678900', USPhoneFormat}, list{'1234567890', USPhoneFormat}, list{'123456789000', USPhoneFormat}, list{'+55(21)91234-56789', BrazilianPhoneFormat}, list{'55(21)91234-567', BrazilianPhoneFormat}, list{'+55219123456789', BrazilianPhoneFormat}, list{'552191234567', BrazilianPhoneFormat}, list{'+552191234567', BrazilianPhoneFormat}, list{'55219123456789', BrazilianPhoneFormat}, list{'2191234567', BrazilianPhoneFormat}, list{'+2191234567', BrazilianPhoneFormat}}
+     */
+    public static function dateProviderInvalidPhone(): array
     {
         return [
             ['11345678900', new USPhoneFormat()],

@@ -9,8 +9,9 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-class TwilioMessagingProviderMock extends TwilioMessagingProvider
+final class TwilioMessagingProviderMock extends TwilioMessagingProvider
 {
+    #[\Override]
     protected function sendHttpRequest(ClientInterface $client, RequestInterface $request): ResponseInterface
     {
         $message = '{

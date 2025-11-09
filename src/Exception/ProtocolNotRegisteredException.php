@@ -2,6 +2,6 @@
 
 namespace ByJG\SmsClient\Exception;
 
-class ProtocolNotRegisteredException extends \Exception
+final class ProtocolNotRegisteredException extends \Exception
 {
 }

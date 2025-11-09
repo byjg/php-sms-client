@@ -13,15 +13,17 @@ use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
-class TwilioVerifyProvider extends ProviderBase
+final class TwilioVerifyProvider extends ProviderBase
 {
     protected Uri $uri;
 
+    #[\Override]
     public static function schema(): array
     {
         return ['twilio_verify'];
     }
 
+    #[\Override]
     public function setUp(Uri $uri): void
     {
         $this->uri = $uri;
@@ -32,6 +34,7 @@ class TwilioVerifyProvider extends ProviderBase
      * @throws RequestException
      * @throws MessageException
      */
+    #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject {
         if (is_string($to)) {
             $to = Phone::phone($to, new USPhoneFormat());

@@ -8,7 +8,7 @@ use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
 
-class ProviderFactory
+final class ProviderFactory
 {
     private static array $config = [];
 
@@ -58,8 +58,13 @@ class ProviderFactory
 
     /**
      * @throws ProtocolNotRegisteredException
+     *
+     * @param null|string $validPrefixes
+     *
+     * @psalm-param 'byjg://user:password@default'|'twilio://accoundId:authToken@default' $connection
+     * @psalm-param '+1'|'+55'|null $validPrefixes
      */
-    public static function registerServices($connection, $validPrefixes = null): void
+    public static function registerServices(string $connection, string|null $validPrefixes = null): void
     {
         if ($connection instanceof Uri) {
             $uri = $connection;
@@ -83,7 +88,7 @@ class ProviderFactory
     /**
      * @throws ProtocolNotRegisteredException
      */
-    public static function createAndSend(string|Phone $to, $message): ReturnObject
+    public static function createAndSend(string|Phone $to, \ByJG\SmsClient\Message $message): ReturnObject
     {
         $provider = null;
         foreach (self::$services as $prefix => $connection) {
