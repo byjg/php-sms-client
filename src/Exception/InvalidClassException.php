@@ -2,6 +2,6 @@
 
 namespace ByJG\SmsClient\Exception;
 
-class InvalidClassException extends \Exception
+final class InvalidClassException extends \Exception
 {
 }

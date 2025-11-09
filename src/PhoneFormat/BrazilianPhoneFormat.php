@@ -2,7 +2,7 @@
 
 namespace ByJG\SmsClient\PhoneFormat;
 
-class BrazilianPhoneFormat extends PhoneFormat
+final class BrazilianPhoneFormat extends PhoneFormat
 {
     public function __construct()
     {

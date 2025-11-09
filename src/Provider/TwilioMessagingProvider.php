@@ -18,11 +18,13 @@ class TwilioMessagingProvider extends ProviderBase
 {
     protected Uri $uri;
 
+    #[\Override]
     public static function schema(): array
     {
         return ['twilio'];
     }
 
+    #[\Override]
     public function setUp(Uri $uri): void
     {
         $this->uri = $uri;
@@ -34,6 +36,7 @@ class TwilioMessagingProvider extends ProviderBase
      * @throws MessageException
      * @throws Exception
      */
+    #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
         if (empty($envelope->getSender())) {

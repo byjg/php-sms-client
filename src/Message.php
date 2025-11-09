@@ -2,7 +2,7 @@
 
 namespace ByJG\SmsClient;
 
-class Message
+final class Message
 {
     const MAX_LENGTH = 160;
     const ALLOW_UNICODE = false;
