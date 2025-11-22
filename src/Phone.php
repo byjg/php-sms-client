@@ -17,7 +17,7 @@ final class Phone
 
     protected function __construct(string $number, PhoneFormat $phoneFormat)
     {
-        $this->number = preg_replace('/[^0-9]/', '', $number);
+        $this->number = preg_replace('/[^0-9]/', '', $number) ?? '';
         $this->phoneFormat = $phoneFormat;
         if (!str_starts_with($this->number, $phoneFormat->getCountryCode())) {
             $this->number = $phoneFormat->getCountryCode() . $this->number;

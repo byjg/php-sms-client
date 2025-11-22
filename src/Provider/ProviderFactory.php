@@ -21,7 +21,8 @@ final class ProviderFactory
      */
     public static function registerProvider(string $class): void
     {
-        if (!in_array(ProviderInterface::class, class_implements($class))) {
+        $implements = class_implements($class);
+        if ($implements === false || !in_array(ProviderInterface::class, $implements)) {
             throw new InvalidClassException('Class not implements ProviderInterface!');
         }
 
@@ -50,6 +51,7 @@ final class ProviderFactory
         }
 
         $class = self::$config[$uri->getScheme()];
+        /** @var ProviderInterface $object */
         $object = new $class($uri);
         $object->setUp($uri);
 
@@ -58,13 +60,8 @@ final class ProviderFactory
 
     /**
      * @throws ProtocolNotRegisteredException
-     *
-     * @param null|string $validPrefixes
-     *
-     * @psalm-param 'byjg://user:password@default'|'twilio://accoundId:authToken@default' $connection
-     * @psalm-param '+1'|'+55'|null $validPrefixes
      */
-    public static function registerServices(string $connection, string|null $validPrefixes = null): void
+    public static function registerServices(string|Uri $connection, string|null $validPrefixes = null): void
     {
         if ($connection instanceof Uri) {
             $uri = $connection;
