@@ -2,7 +2,7 @@
 
 namespace ByJG\SmsClient;
 
-class ReturnObject
+final class ReturnObject
 {
     protected bool $sent = false;
     protected mixed $rawMessage = null;

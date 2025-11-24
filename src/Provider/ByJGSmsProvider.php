@@ -17,11 +17,13 @@ class ByJGSmsProvider extends ProviderBase
 {
     protected Uri $uri;
 
+    #[\Override]
     public static function schema(): array
     {
         return ['byjg'];
     }
 
+    #[\Override]
     public function setUp(Uri $uri): void
     {
         $this->uri = $uri;
@@ -32,6 +34,7 @@ class ByJGSmsProvider extends ProviderBase
      * @throws RequestException
      * @throws MessageException
      */
+    #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
         if (is_string($to)) {

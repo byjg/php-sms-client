@@ -8,7 +8,7 @@ use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
 
-class ProviderFactory
+final class ProviderFactory
 {
     private static array $config = [];
 
@@ -21,7 +21,8 @@ class ProviderFactory
      */
     public static function registerProvider(string $class): void
     {
-        if (!in_array(ProviderInterface::class, class_implements($class))) {
+        $implements = class_implements($class);
+        if ($implements === false || !in_array(ProviderInterface::class, $implements)) {
             throw new InvalidClassException('Class not implements ProviderInterface!');
         }
 
@@ -50,6 +51,7 @@ class ProviderFactory
         }
 
         $class = self::$config[$uri->getScheme()];
+        /** @var ProviderInterface $object */
         $object = new $class($uri);
         $object->setUp($uri);
 
@@ -59,7 +61,7 @@ class ProviderFactory
     /**
      * @throws ProtocolNotRegisteredException
      */
-    public static function registerServices($connection, $validPrefixes = null): void
+    public static function registerServices(string|Uri $connection, string|null $validPrefixes = null): void
     {
         if ($connection instanceof Uri) {
             $uri = $connection;
@@ -83,7 +85,7 @@ class ProviderFactory
     /**
      * @throws ProtocolNotRegisteredException
      */
-    public static function createAndSend(string|Phone $to, $message): ReturnObject
+    public static function createAndSend(string|Phone $to, \ByJG\SmsClient\Message $message): ReturnObject
     {
         $provider = null;
         foreach (self::$services as $prefix => $connection) {

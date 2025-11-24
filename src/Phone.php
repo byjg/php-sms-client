@@ -5,7 +5,7 @@ namespace ByJG\SmsClient;
 use ByJG\SmsClient\PhoneFormat\PhoneFormat;
 use InvalidArgumentException;
 
-class Phone
+final class Phone
 {
     protected string $number;
 
@@ -17,7 +17,7 @@ class Phone
 
     protected function __construct(string $number, PhoneFormat $phoneFormat)
     {
-        $this->number = preg_replace('/[^0-9]/', '', $number);
+        $this->number = preg_replace('/[^0-9]/', '', $number) ?? '';
         $this->phoneFormat = $phoneFormat;
         if (!str_starts_with($this->number, $phoneFormat->getCountryCode())) {
             $this->number = $phoneFormat->getCountryCode() . $this->number;
@@ -84,7 +84,7 @@ class Phone
         return $phone;
     }
 
-    public function format(): string
+    public function format(): string|null
     {
         $phone = $this->hydrate();
         return preg_replace($this->phoneFormat->getFormatRegex(), '$1($2)$3-$4', $phone);

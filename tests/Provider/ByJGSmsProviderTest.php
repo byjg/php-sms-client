@@ -9,9 +9,9 @@ use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\WebRequest\Exception\MessageException;
 use PHPUnit\Framework\TestCase;
 
-class ByJGSmsProviderTest extends TestCase
+final class ByJGSmsProviderTest extends TestCase
 {
-    public function testSendSMS()
+    public function testSendSMS(): void
     {
         ProviderFactory::registerProvider(ByJGSmsProviderMock::class);
 
@@ -21,7 +21,7 @@ class ByJGSmsProviderTest extends TestCase
         $this->assertTrue($response->isSent());
     }
 
-    public function testSendSMSError()
+    public function testSendSMSError(): void
     {
         ProviderFactory::registerProvider(ByJGSmsProviderMock::class);
 
