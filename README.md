@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml/badge.svg?branch=main)](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-sms-client/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-sms-client.svg)](https://github.com/byjg/php-sms-client/releases/)
 
 A lightweight, extensible PHP library for sending SMS messages through multiple providers.
@@ -103,13 +103,6 @@ echo $phone->format();   // Output: +1(234)567-8900
 
 // Validate phone numbers
 $isValid = $phone->validate(throwException: false);
-```
-
-## Dependencies
-
-```mermaid
-flowchart TD
-    byjg/sms-client --> byjg/webrequest
 ```
 
 ----
