@@ -14,7 +14,7 @@ The simplest way to send an SMS is using the `ProviderFactory`:
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 // Register the provider
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);

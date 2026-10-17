@@ -35,7 +35,7 @@ composer require byjg/sms-client
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 // Register and create provider
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);

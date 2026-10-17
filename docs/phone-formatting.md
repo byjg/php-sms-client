@@ -123,30 +123,24 @@ $format = new BrazilianPhoneFormat();
 
 ## Creating Custom Phone Formats
 
-To create a custom phone format, implement the `PhoneFormat` interface:
+To create a custom phone format, extend the abstract `PhoneFormat` class and set its properties in the constructor:
 
 ```php
 use ByJG\SmsClient\PhoneFormat\PhoneFormat;
 
-class CustomPhoneFormat implements PhoneFormat
+class CustomPhoneFormat extends PhoneFormat
 {
-    public function getCountryCode(): string
+    public function __construct()
     {
-        // Return the country code (e.g., "44" for UK)
-        return "44";
-    }
+        // The country code (e.g., "44" for UK)
+        $this->countryCode = '44';
 
-    public function getValidateRegex(): string
-    {
-        // Return regex to validate the full number including country code
-        return '/^44[0-9]{10}$/';
-    }
+        // Regex to validate the full number including country code
+        $this->validateRegex = '/^44[0-9]{10}$/';
 
-    public function getFormatRegex(): string
-    {
-        // Return regex to format the number
+        // Regex to format the number
         // Groups: $1=country code, $2=area, $3=first part, $4=second part
-        return '/^(\+?44)([0-9]{4})([0-9]{3})([0-9]{3})$/';
+        $this->formatRegex = '/^(\+?44)?([0-9]{4})([0-9]{3})([0-9]{3})$/';
     }
 }
 ```

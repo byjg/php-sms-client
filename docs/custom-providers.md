@@ -16,7 +16,7 @@ namespace ByJG\SmsClient\Provider;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 interface ProviderInterface
 {
@@ -53,7 +53,7 @@ use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\Provider\ProviderBase;
 use ByJG\SmsClient\ReturnObject;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 class CustomSmsProvider extends ProviderBase
 {
@@ -87,7 +87,7 @@ class CustomSmsProvider extends ProviderBase
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
         // Normalize phone number
-        $phoneNumber = $this->getPhoneNumber($to);
+        $phoneNumber = $to instanceof Phone ? $to->hydrate() : $to;
 
         // Get message body
         $messageBody = $envelope->getBody();
@@ -95,7 +95,7 @@ class CustomSmsProvider extends ProviderBase
         // Get sender (if set)
         $sender = $envelope->getSender();
         if ($sender instanceof Phone) {
-            $sender = $this->getPhoneNumber($sender);
+            $sender = $sender->hydrate();
         }
 
         // Make API call to your SMS service
@@ -151,8 +151,9 @@ use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\Provider\ProviderBase;
 use ByJG\SmsClient\ReturnObject;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 use ByJG\WebRequest\HttpClient;
+use ByJG\WebRequest\Psr7\MemoryStream;
 use ByJG\WebRequest\Psr7\Request;
 
 class AcmeProvider extends ProviderBase
@@ -178,24 +179,24 @@ class AcmeProvider extends ProviderBase
     #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
-        $to = $this->getPhoneNumber($to);
+        $to = $to instanceof Phone ? $to->hydrate() : $to;
         $from = $envelope->getSender();
 
         if ($from instanceof Phone) {
-            $from = $this->getPhoneNumber($from);
+            $from = $from->hydrate();
         }
 
         // Prepare request
-        $request = new Request("{$this->apiEndpoint}/send");
-        $request = $request->withMethod('POST')
+        $request = Request::getInstance(new Uri("{$this->apiEndpoint}/send"))
+            ->withMethod('POST')
             ->withHeader('Authorization', "Bearer {$this->apiToken}")
             ->withHeader('Content-Type', 'application/json')
-            ->withBody(json_encode([
+            ->withBody(new MemoryStream(json_encode([
                 'to' => $to,
                 'from' => $from,
                 'message' => $envelope->getBody(),
                 'properties' => $envelope->getProperties()
-            ]));
+            ])));
 
         try {
             $client = HttpClient::getInstance();
@@ -248,11 +249,9 @@ use MyApp\SmsProviders\AcmeProvider;
 
 ProviderFactory::registerProvider(AcmeProvider::class);
 
-// Register for specific country codes
-ProviderFactory::registerServices(
-    "acmesms://your-api-token@default",
-    ["+44", "+49"] // UK and Germany
-);
+// Register for specific country codes (one call per prefix)
+ProviderFactory::registerServices("acmesms://your-api-token@default", "+44"); // UK
+ProviderFactory::registerServices("acmesms://your-api-token@default", "+49"); // Germany
 
 // Automatically uses your provider for UK/German numbers
 $response = ProviderFactory::createAndSend(
@@ -263,15 +262,8 @@ $response = ProviderFactory::createAndSend(
 
 ## Helper Methods
 
-The `ProviderBase` class provides useful helper methods:
-
-### getPhoneNumber()
-
-Converts a `Phone` object to a string:
-
-```php
-$phoneString = $this->getPhoneNumber($phoneObject);
-```
+The `ProviderBase` class provides one helper method. To convert a `Phone` object to a string, call
+`$phone->hydrate()` (see [Phone Formatting](phone-formatting.md)).
 
 ### sendHttpRequest()
 
@@ -294,11 +286,11 @@ protected function sendHttpRequest(
 
 1. **Error Handling**: Always wrap API calls in try-catch blocks and return appropriate `ReturnObject` instances
 
-2. **Phone Number Validation**: Use the `getPhoneNumber()` helper to ensure proper phone number format
+2. **Phone Number Validation**: Use `Phone::hydrate()` (it validates the number) to ensure proper phone number format
 
 3. **Configuration**: Store API credentials and endpoints in the `setUp()` method
 
-4. **Response Data**: Include useful information in the `ReturnObject` extra info array
+4. **Response Data**: Include useful information in the `ReturnObject` raw message
 
 5. **Testing**: Create a mock version of your provider for testing (extend your provider and override `sendHttpRequest()`)
 
@@ -324,7 +316,7 @@ class AcmeProviderMock extends AcmeProvider
         RequestInterface $request
     ): ResponseInterface {
         // Return mock response
-        return new Response(200, new MemoryStream(json_encode([
+        return (new Response(200))->withBody(new MemoryStream(json_encode([
             'status' => 'sent',
             'message_id' => 'mock-12345'
         ])));
