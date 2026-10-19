@@ -3,16 +3,16 @@
 namespace Tests\Provider;
 
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
+use ByJG\WebRequest\HttpPromise;
 use ByJG\WebRequest\Psr7\MemoryStream;
 use ByJG\WebRequest\Psr7\Response;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 final class TwilioMessagingProviderMock extends TwilioMessagingProvider
 {
     #[\Override]
-    protected function sendHttpRequest(ClientInterface $client, RequestInterface $request): ResponseInterface
+    protected function sendHttpRequestAsync(ClientInterface $client, RequestInterface $request): HttpPromise
     {
         $message = '{
   "account_sid": "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -42,7 +42,7 @@ final class TwilioMessagingProviderMock extends TwilioMessagingProvider
   "to": "+15558675310",
   "uri": "/2010-04-01/Accounts/ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/Messages/SMaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json"
 }';
-        return (new Response(200))
-            ->withBody(new MemoryStream($message));
+        return HttpPromise::resolve((new Response(200))
+            ->withBody(new MemoryStream($message)));
     }
 }

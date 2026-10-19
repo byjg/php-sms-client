@@ -17,6 +17,7 @@ use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
+use ByJG\WebRequest\HttpPromise;
 
 interface ProviderInterface
 {
@@ -39,8 +40,18 @@ interface ProviderInterface
      * @return ReturnObject Result of the send operation
      */
     public function send(string|Phone $to, Message $envelope): ReturnObject;
+
+    /**
+     * Send without waiting: the promise is fulfilled with the ReturnObject,
+     * or rejected with any error (it does not throw)
+     */
+    public function sendAsync(string|Phone $to, Message $envelope): HttpPromise;
 }
 ```
+
+`ProviderBase` implements `sendAsync()` with your `send()`: the message is sent at once and the promise is already
+settled. To send in parallel, override `sendAsync()` with `sendHttpRequestAsync()` (below) and implement `send()` as
+`return $this->sendAsync($to, $envelope)->await();`, as the built-in providers do.
 
 ## Using ProviderBase
 
@@ -262,7 +273,7 @@ $response = ProviderFactory::createAndSend(
 
 ## Helper Methods
 
-The `ProviderBase` class provides one helper method. To convert a `Phone` object to a string, call
+The `ProviderBase` class provides the helper methods below, and `HttpPromise::try()` builds the promise. To convert a `Phone` object to a string, call
 `$phone->hydrate()` (see [Phone Formatting](phone-formatting.md)).
 
 ### sendHttpRequest()
@@ -279,6 +290,26 @@ protected function sendHttpRequest(
     RequestInterface $request
 ): ResponseInterface {
     return $client->sendRequest($request);
+}
+```
+
+### sendHttpRequestAsync()
+
+Sends the request without waiting and returns an `HttpPromise` of the response: in parallel with the ByJG
+`HttpClient` (`sendAsync()`), or already settled with another PSR-18 client. Override it in a test mock to return
+`HttpPromise::resolve($response)`.
+
+### HttpPromise::try()
+
+`HttpPromise::try(fn() => ...)` (byjg/webrequest) returns a promise resolved with the closure's return value (a
+returned promise is followed), or rejected with the exception it throws, so `sendAsync()` does not throw:
+
+```php
+#[\Override]
+public function sendAsync(string|Phone $to, Message $envelope): HttpPromise
+{
+    return HttpPromise::try(fn() => $this->sendHttpRequestAsync(HttpClient::getInstance(), $this->buildRequest($to, $envelope))
+        ->then(fn(ResponseInterface $response) => new ReturnObject($response->getStatusCode() == 200, (string)$response->getBody())));
 }
 ```
 

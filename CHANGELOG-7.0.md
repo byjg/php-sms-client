@@ -5,7 +5,21 @@
 
 ## Breaking Changes
 
-- None.
+- `ProviderInterface` has a new method `sendAsync(string|Phone $to, Message $envelope): HttpPromise`. Providers that
+  extend `ProviderBase` get it (it sends with `send()`); a class that implements the interface directly has to add it.
+
+## New Features
+
+- `sendAsync()` returns a `ByJG\WebRequest\HttpPromise` fulfilled with the `ReturnObject`, or rejected with the
+  error (it does not throw). The HTTP providers (`ByJGSmsProvider`, `TwilioMessagingProvider`,
+  `TwilioVerifyProvider`) send in parallel with `HttpClient::sendAsync()` (curl_multi), so several messages can be
+  sent at once with `HttpPromise::all()`; their `send()` is `sendAsync()->await()`. `FakeProvider` and providers
+  that only implement `send()` return a promise that is already settled.
+- `ProviderFactory::createAndSendAsync()`, the async counterpart of `createAndSend()`. For long lists,
+  `HttpPromise::map()` (byjg/webrequest) limits the messages in progress (see `docs/basic-usage.md`).
+- `ProviderBase::sendHttpRequestAsync()` (the hook the HTTP providers use, which test mocks override).
+  `sendHttpRequest()` is unchanged. See `docs/basic-usage.md` and
+  `docs/custom-providers.md`.
 
 ## Requirements
 

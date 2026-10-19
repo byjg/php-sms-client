@@ -9,9 +9,11 @@ use ByJG\WebRequest\Exception\NetworkException;
 use ByJG\WebRequest\Exception\RequestException;
 use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
 use ByJG\WebRequest\HttpClient;
+use ByJG\WebRequest\HttpPromise;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
+use Psr\Http\Message\ResponseInterface;
 
 final class TwilioVerifyProvider extends ProviderBase
 {
@@ -35,16 +37,25 @@ final class TwilioVerifyProvider extends ProviderBase
      * @throws MessageException
      */
     #[\Override]
-    public function send(string|Phone $to, Message $envelope): ReturnObject {
-        if (is_string($to)) {
-            $to = Phone::phone($to, new USPhoneFormat());
-        }
+    public function send(string|Phone $to, Message $envelope): ReturnObject
+    {
+        return $this->sendAsync($to, $envelope)->await();
+    }
 
-        if (empty($envelope->getBody())) {
-            return $this->sendVerify($to);
-        } else {
-            return $this->sendVerifyCheck($to, $envelope);
-        }
+    #[\Override]
+    public function sendAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
+        return HttpPromise::try(function () use ($to, $envelope) {
+            if (is_string($to)) {
+                $to = Phone::phone($to, new USPhoneFormat());
+            }
+
+            if (empty($envelope->getBody())) {
+                return $this->sendVerify($to);
+            } else {
+                return $this->sendVerifyCheck($to, $envelope);
+            }
+        });
     }
 
     /**
@@ -52,7 +63,7 @@ final class TwilioVerifyProvider extends ProviderBase
      * @throws RequestException
      * @throws MessageException
      */
-    protected function sendVerify(Phone $to): ReturnObject
+    protected function sendVerify(Phone $to): HttpPromise
     {
         $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/Verifications"),
@@ -62,9 +73,8 @@ final class TwilioVerifyProvider extends ProviderBase
             ]
         );
 
-        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
-
-        return new ReturnObject($response->getStatusCode() == 201, $response->getBody()->getContents());
+        return $this->sendHttpRequestAsync(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request)
+            ->then(fn(ResponseInterface $response) => new ReturnObject($response->getStatusCode() == 201, $response->getBody()->getContents()));
     }
 
     /**
@@ -72,7 +82,7 @@ final class TwilioVerifyProvider extends ProviderBase
      * @throws RequestException
      * @throws MessageException
      */
-    protected function sendVerifyCheck(Phone $to, Message $envelope): ReturnObject
+    protected function sendVerifyCheck(Phone $to, Message $envelope): HttpPromise
     {
         $request = RequestFormUrlEncoded::build(
             new Uri("https://verify.twilio.com/v2/Services/" . $this->uri->getHost() . "/VerificationCheck"),
@@ -82,8 +92,7 @@ final class TwilioVerifyProvider extends ProviderBase
             ]
         );
 
-        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
-
-        return new ReturnObject($response->getStatusCode() == 200, $response->getBody()->getContents());
+        return $this->sendHttpRequestAsync(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request)
+            ->then(fn(ResponseInterface $response) => new ReturnObject($response->getStatusCode() == 200, $response->getBody()->getContents()));
    }
 }

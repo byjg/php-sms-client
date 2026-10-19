@@ -9,9 +9,11 @@ use ByJG\WebRequest\Exception\NetworkException;
 use ByJG\WebRequest\Exception\RequestException;
 use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
 use ByJG\WebRequest\HttpClient;
+use ByJG\WebRequest\HttpPromise;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
+use Psr\Http\Message\ResponseInterface;
 
 class ByJGSmsProvider extends ProviderBase
 {
@@ -37,6 +39,21 @@ class ByJGSmsProvider extends ProviderBase
     #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
+        return $this->sendAsync($to, $envelope)->await();
+    }
+
+    #[\Override]
+    public function sendAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
+        return HttpPromise::try(fn() => $this->sendRequestAsync($to, $envelope));
+    }
+
+    /**
+     * @throws MessageException
+     * @throws RequestException
+     */
+    protected function sendRequestAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
         if (is_string($to)) {
             $to = Phone::phone($to, new BrazilianPhoneFormat());
         }
@@ -60,12 +77,13 @@ class ByJGSmsProvider extends ProviderBase
             ]
         );
 
-        $response = $this->sendHttpRequest(HttpClient::getInstance(), $request);
+        return $this->sendHttpRequestAsync(HttpClient::getInstance(), $request)
+            ->then(function (ResponseInterface $response) {
+                $result = $response->getBody()->getContents();
 
-        $result = $response->getBody()->getContents();
-
-        $resultParts = explode("|", $result . "|");
-        $resultStatusParts = explode(",", $resultParts[1]);
-        return new ReturnObject($resultParts[0] == "OK" && $resultStatusParts[0] == '0', $result);
+                $resultParts = explode("|", $result . "|");
+                $resultStatusParts = explode(",", $resultParts[1]);
+                return new ReturnObject($resultParts[0] == "OK" && $resultStatusParts[0] == '0', $result);
+            });
     }
 }
