@@ -7,6 +7,7 @@ use ByJG\SmsClient\Exception\ProtocolNotRegisteredException;
 use ByJG\SmsClient\Phone;
 use ByJG\SmsClient\ReturnObject;
 use ByJG\Util\Uri;
+use ByJG\WebRequest\HttpPromise;
 
 final class ProviderFactory
 {
@@ -87,6 +88,26 @@ final class ProviderFactory
      */
     public static function createAndSend(string|Phone $to, \ByJG\SmsClient\Message $message): ReturnObject
     {
+        return self::createForPhone($to)->send($to, $message);
+    }
+
+    /**
+     * Send without waiting, see ProviderInterface::sendAsync()
+     *
+     * @throws ProtocolNotRegisteredException
+     */
+    public static function createAndSendAsync(string|Phone $to, \ByJG\SmsClient\Message $message): HttpPromise
+    {
+        return self::createForPhone($to)->sendAsync($to, $message);
+    }
+
+    /**
+     * The provider registered for the phone prefix, or the default one
+     *
+     * @throws ProtocolNotRegisteredException
+     */
+    protected static function createForPhone(string|Phone $to): ProviderInterface
+    {
         $provider = null;
         foreach (self::$services as $prefix => $connection) {
             if (is_string($to) && preg_match('/^\+?' . trim($prefix, "+") . '/', $to)) {
@@ -104,7 +125,7 @@ final class ProviderFactory
             $provider = self::create(self::$services['default']);
         }
 
-        return $provider->send($to, $message);
+        return $provider;
     }
 
 }

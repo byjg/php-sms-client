@@ -39,7 +39,7 @@ twilio://accountId:authToken@default
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);
 
@@ -53,7 +53,7 @@ $response = $provider->send(
 );
 
 if ($response->isSent()) {
-    echo "Message sent! SID: " . $response->getExtraInfo()['sid'];
+    echo "Message sent! SID: " . json_decode($response->getRawMessage(), true)['sid'];
 }
 ```
 
@@ -76,7 +76,7 @@ twilio_verify://accountId:authToken@serviceSid
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioVerifyProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 ProviderFactory::registerProvider(TwilioVerifyProvider::class);
 
@@ -119,6 +119,8 @@ byjg://username:password@default
 
 **Availability:**
 - Only available for Brazilian phone numbers (+55)
+- A string number is parsed with `BrazilianPhoneFormat`; a `Phone` object with any other format throws
+  `ByJG\WebRequest\Exception\MessageException`
 
 **Example:**
 
@@ -126,7 +128,7 @@ byjg://username:password@default
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\ByJGSmsProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 ProviderFactory::registerProvider(ByJGSmsProvider::class);
 
@@ -160,7 +162,7 @@ fakesender://
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\FakeProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 ProviderFactory::registerProvider(FakeProvider::class);
 
@@ -232,14 +234,15 @@ if ($response->isSent()) {
     echo "Success!";
 }
 
-// Get extra information (provider-specific)
-$extraInfo = $response->getExtraInfo();
-print_r($extraInfo);
+// Get the raw response returned by the provider
+$rawMessage = $response->getRawMessage();
+print_r($rawMessage);
 ```
 
-The `extraInfo` array contains provider-specific data, such as:
-- Twilio: Message SID, status, error codes
-- ByJG: Transaction ID, delivery status
+The raw message is provider-specific, such as:
+- Twilio: the JSON response body (message SID, status, error codes)
+- ByJG: the plain text response of the service
+- Fake Sender: the string `OK`
 
 ## Provider Comparison
 

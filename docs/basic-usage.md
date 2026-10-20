@@ -14,7 +14,7 @@ The simplest way to send an SMS is using the `ProviderFactory`:
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 // Register the provider
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);
@@ -57,6 +57,37 @@ $response = ProviderFactory::createAndSend(
     (new Message("This is a test message"))->withSender("+12223217654")
 );
 ```
+
+## Sending in Parallel
+
+`sendAsync(string|Phone $to, Message $envelope)` returns a `ByJG\WebRequest\HttpPromise` (see
+[byjg/webrequest](https://github.com/byjg/php-webrequest/blob/master/docs/http-client-parallel.md)) fulfilled with
+the `ReturnObject`, or rejected with the error: it does not throw. The HTTP providers (`byjg`, `twilio`,
+`twilio_verify`) send in parallel while the promises are awaited:
+
+```php
+use ByJG\WebRequest\HttpPromise;
+
+$message = (new Message("Your order has shipped"))->withSender("+12223217654");
+
+$results = HttpPromise::all(
+    ...array_map(fn($phone) => ProviderFactory::createAndSendAsync($phone, $message), $phones)
+)->await();   // the ReturnObject of each phone, in the same order
+```
+
+For a long list, `HttpPromise::all()` would open every connection at once and could exceed the provider's rate limit
+(HTTP 429). `HttpPromise::map()` keeps at most a number of messages in progress:
+
+```php
+$results = HttpPromise::map(
+    $phones,
+    fn($phone) => ProviderFactory::createAndSendAsync($phone, $message),
+    10   // at most 10 messages in progress
+)->await();   // the ReturnObject of each phone, in the same order
+```
+
+`ProviderFactory::createAndSendAsync()` selects the provider as `createAndSend()` does. A provider that only
+implements `send()` (e.g. `fakesender`, or a custom one) sends at once and returns a promise that is already settled.
 
 ## Multi-Provider Setup
 

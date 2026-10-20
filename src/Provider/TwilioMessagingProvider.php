@@ -9,10 +9,12 @@ use ByJG\WebRequest\Exception\NetworkException;
 use ByJG\WebRequest\Exception\RequestException;
 use ByJG\WebRequest\Helper\RequestFormUrlEncoded;
 use ByJG\WebRequest\HttpClient;
+use ByJG\WebRequest\HttpPromise;
 use ByJG\Util\Uri;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 use Exception;
+use Psr\Http\Message\ResponseInterface;
 
 class TwilioMessagingProvider extends ProviderBase
 {
@@ -39,6 +41,20 @@ class TwilioMessagingProvider extends ProviderBase
     #[\Override]
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
+        return $this->sendAsync($to, $envelope)->await();
+    }
+
+    #[\Override]
+    public function sendAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
+        return HttpPromise::try(fn() => $this->sendRequestAsync($to, $envelope));
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function sendRequestAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
         if (empty($envelope->getSender())) {
             throw new Exception("The 'sender' is required");
         }
@@ -63,8 +79,10 @@ class TwilioMessagingProvider extends ProviderBase
                 "Body" => $envelope->getBody()
             ]
         );
-        $response = $this->sendHttpRequest(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request);
-
-        return new ReturnObject($response->getStatusCode() == 201 || $response->getStatusCode() == 200, $response->getBody()->getContents());
+        return $this->sendHttpRequestAsync(HttpClient::getInstance()->withCurlOption(CURLOPT_USERPWD, $this->uri->getUsername() . ":" . $this->uri->getPassword()), $request)
+            ->then(fn(ResponseInterface $response) => new ReturnObject(
+                $response->getStatusCode() == 201 || $response->getStatusCode() == 200,
+                $response->getBody()->getContents()
+            ));
     }
 }

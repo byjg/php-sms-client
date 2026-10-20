@@ -4,6 +4,7 @@ namespace ByJG\SmsClient\Provider;
 
 use ByJG\SmsClient\Phone;
 use ByJG\Util\Uri;
+use ByJG\WebRequest\HttpPromise;
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\ReturnObject;
 
@@ -24,5 +25,11 @@ final class FakeProvider implements ProviderInterface
     public function send(string|Phone $to, Message $envelope): ReturnObject
     {
         return new ReturnObject(true, "OK");
+    }
+
+    #[\Override]
+    public function sendAsync(string|Phone $to, Message $envelope): HttpPromise
+    {
+        return HttpPromise::resolve($this->send($to, $envelope));
     }
 }

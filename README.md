@@ -1,13 +1,19 @@
+---
+sidebar_key: sms-client
+tags: [php, sms]
+---
+
 # SMS Client
+
+A lightweight, extensible PHP library for sending SMS messages through multiple providers.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-%23ea4aaa?logo=githubsponsors&logoColor=white&labelColor=0d1117)](https://github.com/sponsors/byjg)
 [![Build Status](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml/badge.svg?branch=main)](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml)
-[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
+[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](https://opensource.byjg.com)
+[![Install MCP Server](https://img.shields.io/badge/Install-MCP_Server-8A2BE2?logo=modelcontextprotocol&logoColor=white)](https://opensource.byjg.com/docs/ai/mcpserver-byjg-docs/)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-sms-client/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-sms-client.svg)](https://github.com/byjg/php-sms-client/releases/)
-
-A lightweight, extensible PHP library for sending SMS messages through multiple providers.
 
 ## Features
 
@@ -29,7 +35,7 @@ composer require byjg/sms-client
 use ByJG\SmsClient\Message;
 use ByJG\SmsClient\Provider\ProviderFactory;
 use ByJG\SmsClient\Provider\TwilioMessagingProvider;
-use ByJG\Uri\Uri;
+use ByJG\Util\Uri;
 
 // Register and create provider
 ProviderFactory::registerProvider(TwilioMessagingProvider::class);
@@ -105,12 +111,11 @@ echo $phone->format();   // Output: +1(234)567-8900
 $isValid = $phone->validate(throwException: false);
 ```
 
-## Dependencies
+## Running Tests
 
-```mermaid
-flowchart TD
-    byjg/sms-client --> byjg/webrequest
+```bash
+vendor/bin/phpunit
 ```
 
 ----
-[Open source ByJG](http://opensource.byjg.com)
+[Open source ByJG](https://opensource.byjg.com)
