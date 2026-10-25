@@ -5,7 +5,7 @@ tags: [php, sms]
 
 # SMS Client
 
-A lightweight, extensible PHP library for sending SMS messages through multiple providers.
+One interface to send SMS through any provider, and the right provider chosen by the phone number's country.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-%23ea4aaa?logo=githubsponsors&logoColor=white&labelColor=0d1117)](https://github.com/sponsors/byjg)
 [![Build Status](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml/badge.svg?branch=main)](https://github.com/byjg/php-sms-client/actions/workflows/phpunit.yml)
@@ -14,6 +14,25 @@ A lightweight, extensible PHP library for sending SMS messages through multiple 
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-sms-client/)
 [![GitHub license](https://img.shields.io/github/license/byjg/php-sms-client.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-sms-client.svg)](https://github.com/byjg/php-sms-client/releases/)
+
+## Why
+
+SMS providers differ by country: one is cheap or reliable in the US, another in Brazil. Each
+has its own SDK, so supporting two means two code paths, and the choice is spread wherever a
+message is sent.
+
+SMS Client puts the providers behind one interface, chosen by the connection URI, and can
+route each message by the destination country:
+
+```php
+ProviderFactory::registerServices("twilio://accountId:authToken@default", "+1");
+ProviderFactory::registerServices("byjg://username:password@default", "+55");
+
+ProviderFactory::createAndSend("+12221234567", new Message("Hello USA!"));      // Twilio
+ProviderFactory::createAndSend("+5521987654321", new Message("Olá Brasil!"));   // ByJG
+```
+
+Phone numbers are validated and formatted per country, and a new provider is one class.
 
 ## Features
 
